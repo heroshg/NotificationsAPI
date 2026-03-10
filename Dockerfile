@@ -4,15 +4,18 @@ EXPOSE 8080
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
-COPY ["NotificationsAPI.csproj", "."]
-RUN dotnet restore
-COPY . .
-RUN dotnet build -c Release -o /app/build
 
-FROM build AS publish
-RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
+COPY ["NotificationsAPI.sln", "."]
+COPY ["src/Notifications.Domain/Notifications.Domain.csproj", "src/Notifications.Domain/"]
+COPY ["src/Notifications.Application/Notifications.Application.csproj", "src/Notifications.Application/"]
+COPY ["src/Notifications.Infrastructure/Notifications.Infrastructure.csproj", "src/Notifications.Infrastructure/"]
+COPY ["src/Notifications.API/Notifications.API.csproj", "src/Notifications.API/"]
+RUN dotnet restore "src/Notifications.API/Notifications.API.csproj"
+
+COPY . .
+RUN dotnet publish "src/Notifications.API/Notifications.API.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
-COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "NotificationsAPI.dll"]
+COPY --from=build /app/publish .
+ENTRYPOINT ["dotnet", "Notifications.API.dll"]
