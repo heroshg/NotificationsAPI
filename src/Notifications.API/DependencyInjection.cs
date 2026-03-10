@@ -1,4 +1,6 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using Notifications.Infrastructure.Persistence;
 
 namespace Notifications.API;
 
@@ -20,5 +22,11 @@ public static class DependencyInjection
         app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Notifications API v1"));
         app.MapControllers();
         return app;
+    }
+
+    public static void ApplyMigrations(this WebApplication app)
+    {
+        using var scope = app.Services.CreateScope();
+        scope.ServiceProvider.GetRequiredService<NotificationsDbContext>().Database.Migrate();
     }
 }
